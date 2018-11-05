@@ -16,19 +16,24 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSIONS_REQUEST_CODE = 100;
 
-    //Timer mTimer;
+    Timer mTimer;
+
+    //  タイマー用の時間のための変数
     double mTimerSec = 0.0f;
 
     //Handler mHandler = new Handler;
 
+    //  メンバ変数でcursor1を宣言し、ここにGetContentInfo()内でcursorの内容を代入する
     Cursor cursor1 = null;
 
     Button mNextButton;
@@ -41,14 +46,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         mNextButton = (Button) findViewById(R.id.next_button);
-        mNextButton.setOnClickListener(this);
-
         mStartButton = (Button) findViewById(R.id.start_button);
-        mStartButton.setOnClickListener(this);
-
         mPrevButton = (Button) findViewById(R.id.prev_button);
-        mPrevButton.setOnClickListener(this);
-
 
         //  Andorid6.0以降の場合
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -67,38 +66,132 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             getContentsInfo();
         }
 
-        @Override
-        public void onClick (View v){
-            //  タップをした時の処理。ボタンで分岐
-            if (cursor1 == null) {
-                //  画像の情報を取得する
-                ContentResolver resolver = getContentResolver();
-                Cursor cursor = resolver.query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,//  データの種類
-                        null,    //  項目（null=全項目）
-                        null,     //  フィルタ条件（null=フィルタなし）
-                        null,  //  フィルタ用パラメータ
-                        null     //  ソート（null=ソートなし）
-                );
+        //  再生と停止の処理
+        mStartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //  タイマーのカウントが0なら
+                if (mTimer == null) {
+
+                    //  タイマーの作成
+                    mTimer = new Timer();
+
+                    //  タイマースタート
+                    mTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            mTimerSec += 0.1;
+
+                            //  タイマーが２秒を超えたら
+                            if (mTimerSec > 2.0f) {
+
+                                //  カーソルの位置を１つ進める関数を実行する
+                                if (cursor1.moveToNext()) {
+
+                                    //  indexからIDを取得し、そのIDから画像のURIを取得する
+                                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                                    Long id = cursor1.getLong(fieldIndex);
+                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                    imageView.setImageURI(imageUri);
+
+                                    mTimerSec = 0;
+
+                                } else {
+                                    //  もしも最後の画像まで戻ったら、カーソルを最初に戻す関数を実行する
+                                    cursor1.moveToFirst();
+
+                                    //  indexからIDを取得し、そのIDから画像のURIを取得する
+                                    //  中身はmoveToStart内のものと同じ
+                                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                                    Long id = cursor1.getLong(fieldIndex);
+                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                    imageView.setImageURI(imageUri);
+
+                                    mTimerSec = 0;
+                                }
+                            }
+                        }
+                        //  +0.1秒後に+0.1する
+                    }, 100, 100);
+
+                } else {
+                    mTimer.cancel();
+                    mTimer = null;
+                }
             }
-            if (v.getID() == R.id.mStartButton) {
+        });
 
-                //  Timerを使用して画像を時間で再生する。
-                //  また、その間は戻ると進むをタップできないようにする
-                getContentsInfo();
+        //  Next（進む）ボタンを押した際の処理
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //  カーソルの位置を１つ進める関数を実行する
+                if(cursor1.moveToNext()){
 
-            } else if (v.getID() == R.id.mNextButton) {
-                //if (cursor1.moveToNext()) {
-                    //  画像を取得する
-                //}
+                    //  indexからIDを取得し、そのIDから画像のURIを取得する
+                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor1.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-            } else if (v.getID() == R.id.mPrevButton) {
-                //if (cursor1.moveToPrevious()) {
-                    //  前の画像を取得する
-                //}
+                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                    imageView.setImageURI(imageUri);
+                } else {
+                    //  もしも最後の画像まで戻ったら、カーソルを最初に戻す関数を実行する
+                    //  これを入れないとfalseが戻ってしまい、エラーになる
+                    cursor1.moveToFirst();
+
+                    //  indexからIDを取得し、そのIDから画像のURIを取得する
+                    //  中身はmoveToStart内のものと同じ
+                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                    Long id = cursor1.getLong(fieldIndex);
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                    imageView.setImageURI(imageUri);
+                }
             }
-        }
+        });
+
+        //  Previous（戻る）ボタンを押した際の処理
+        mPrevButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //  カーソルの位置を１つ戻す関数を実行する
+                        if(cursor1.moveToPrevious()){
+
+                            //  indexからIDを取得し、そのIDから画像のURIを取得する
+                            //  中身はmoveToStart内のものと同じ
+                            int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                            Long id = cursor1.getLong(fieldIndex);
+                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                            //  画像を表示する
+                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                            imageView.setImageURI(imageUri);
+
+                            //  もしも最初の画像まで戻ったら、カーソルを最後に戻す関数を実行する
+                        } else {
+                            //  メソッドを実行
+                            cursor1.moveToLast();
+
+                            //  indexからIDを取得し、そのIDから画像のURIを取得する
+                            //  中身はmoveToStart内のものと同じ
+                            int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                            Long id = cursor1.getLong(fieldIndex);
+                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                            imageView.setImageURI(imageUri);
+                        }
+                    }
+        });
     }
+
 
 
     //  パーミッションの選択結果の受け取りメソッド
@@ -115,11 +208,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //  画像の取得処理のメソッド
+    //  画像の取得処理のメソッド。最初だけ扱う関数
     private void getContentsInfo() {
 
         ContentResolver resolver = getContentResolver();
-        Cursor cursor = resolver.query(
+
+        //  cursorではなく、メンバで宣言したcursor1に代入する。以下のcursorもcursor1に変更
+        //  このcursor1がカーソルの位置になる
+        cursor1 = resolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,//  データの種類
                 null,    //  項目（null=全項目）
                 null,     //  フィルタ条件（null=フィルタなし）
@@ -127,16 +223,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 null     //  ソート（null=ソートなし）
         );
 
-
-        if (cursor.moveToFirst()) {
+        //  一番最初の画像にカーソルを置く関数を実行
+        if (cursor1.moveToFirst()) {
                 //  indexからIDを取得し、そのIDから画像のURIを取得する
-                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                Long id = cursor.getLong(fieldIndex);
+                int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                Long id = cursor1.getLong(fieldIndex);
                 Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
                 ImageView imageView = (ImageView) findViewById(R.id.imageView);
                 imageView.setImageURI(imageUri);
         }
-        cursor.close();
+        //cursor.close();
     }
 }
