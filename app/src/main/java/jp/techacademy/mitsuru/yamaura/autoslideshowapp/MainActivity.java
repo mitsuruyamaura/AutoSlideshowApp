@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                     mNextButton.setEnabled(true);
                     mPrevButton.setEnabled(true);
                 }
+                
             }
         });
 
