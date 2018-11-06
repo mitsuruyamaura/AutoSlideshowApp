@@ -86,41 +86,44 @@ public class MainActivity extends AppCompatActivity {
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    //mTimerText.setText("停止");
+                                    mStartButton.setText("停止");
+                                    mNextButton.setEnabled(false);
+                                    mPrevButton.setEnabled(false);
+
+                                    //  タイマーが２秒を超えたら
+                                    if (mTimerSec > 2.0f) {
+
+                                        //  カーソルの位置を１つ進める関数を実行する
+                                        if (cursor1.moveToNext()) {
+
+                                            //  indexからIDを取得し、そのIDから画像のURIを取得する
+                                            int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                                            Long id = cursor1.getLong(fieldIndex);
+                                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                            imageView.setImageURI(imageUri);
+
+                                            mTimerSec = 0;
+
+                                        } else {
+                                            //  もしも最後の画像まで戻ったら、カーソルを最初に戻す関数を実行する
+                                            cursor1.moveToFirst();
+
+                                            //  indexからIDを取得し、そのIDから画像のURIを取得する
+                                            //  中身はmoveToStart内のものと同じ
+                                            int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
+                                            Long id = cursor1.getLong(fieldIndex);
+                                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                                            ImageView imageView = (ImageView) findViewById(R.id.imageView);
+                                            imageView.setImageURI(imageUri);
+
+                                            mTimerSec = 0;
+                                        }
+                                    }
                                 }
                             });
-                            //  タイマーが２秒を超えたら
-                            if (mTimerSec > 2.0f) {
-
-                                //  カーソルの位置を１つ進める関数を実行する
-                                if (cursor1.moveToNext()) {
-
-                                    //  indexからIDを取得し、そのIDから画像のURIを取得する
-                                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
-                                    Long id = cursor1.getLong(fieldIndex);
-                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-
-                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                                    imageView.setImageURI(imageUri);
-
-                                    mTimerSec = 0;
-
-                                } else {
-                                    //  もしも最後の画像まで戻ったら、カーソルを最初に戻す関数を実行する
-                                    cursor1.moveToFirst();
-
-                                    //  indexからIDを取得し、そのIDから画像のURIを取得する
-                                    //  中身はmoveToStart内のものと同じ
-                                    int fieldIndex = cursor1.getColumnIndex(MediaStore.Images.Media._ID);
-                                    Long id = cursor1.getLong(fieldIndex);
-                                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-
-                                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                                    imageView.setImageURI(imageUri);
-
-                                    mTimerSec = 0;
-                                }
-                            }
                         }
                         //  +0.1秒後に+0.1する
                     }, 100, 100);
@@ -128,6 +131,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     mTimer.cancel();
                     mTimer = null;
+                    mStartButton.setText("再生");
+                    mNextButton.setEnabled(true);
+                    mPrevButton.setEnabled(true);
                 }
             }
         });
