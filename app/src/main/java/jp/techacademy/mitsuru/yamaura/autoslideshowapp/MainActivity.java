@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     //  タイマー用の時間のための変数
     double mTimerSec = 0.0f;
 
-    //Handler mHandler = new Handler;
+    Handler mHandler = new Handler();
 
     //  メンバ変数でcursor1を宣言し、ここにGetContentInfo()内でcursorの内容を代入する
     Cursor cursor1 = null;
@@ -83,6 +83,12 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             mTimerSec += 0.1;
 
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //mTimerText.setText("停止");
+                                }
+                            });
                             //  タイマーが２秒を超えたら
                             if (mTimerSec > 2.0f) {
 
