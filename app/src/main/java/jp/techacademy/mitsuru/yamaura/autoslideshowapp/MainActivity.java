@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                     mTimer.schedule(new TimerTask() {
                         @Override
                         public void run() {
-                            mTimerSec += 0.1;
+                            //mTimerSec += 0.1;
 
                             mHandler.post(new Runnable() {
                                 @Override
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                                     mPrevButton.setEnabled(false);
 
                                     //  タイマーが２秒を超えたら
-                                    if (mTimerSec > 2.0f) {
+                                    //if (mTimerSec > 2.0f) {
 
                                         //  カーソルの位置を１つ進める関数を実行する
                                         if (cursor1.moveToNext()) {
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                                             ImageView imageView = (ImageView) findViewById(R.id.imageView);
                                             imageView.setImageURI(imageUri);
 
-                                            mTimerSec = 0;
+                                            //mTimerSec = 0;
 
                                         } else {
                                             //  もしも最後の画像まで戻ったら、カーソルを最初に戻す関数を実行する
@@ -119,14 +119,15 @@ public class MainActivity extends AppCompatActivity {
                                             ImageView imageView = (ImageView) findViewById(R.id.imageView);
                                             imageView.setImageURI(imageUri);
 
-                                            mTimerSec = 0;
+                                            //mTimerSec = 0;
                                         }
-                                    }
+                                    //}
                                 }
                             });
                         }
                         //  +0.1秒後に+0.1する
-                    }, 100, 100);
+                        //  ２秒後に送る
+                    }, 2000, 2000);
 
                 } else {
                     mTimer.cancel();
@@ -135,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
                     mNextButton.setEnabled(true);
                     mPrevButton.setEnabled(true);
                 }
-                
             }
         });
 
@@ -206,7 +206,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     //  パーミッションの選択結果の受け取りメソッド
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResult){
@@ -214,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
             case PERMISSIONS_REQUEST_CODE:
                 if(grantResult[0] == PackageManager.PERMISSION_GRANTED){
                     getContentsInfo();
+                }else{
+                    Toast.makeText(this,"許可してください",Toast.LENGTH_SHORT).show();
+                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
                 }
                 break;
             default:
